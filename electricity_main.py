@@ -194,27 +194,32 @@ def showunpaid():
         """
 
 def paybill():
-    # Get meter number and find unpaid bills
-    mtr = input("Enter Meter No .: ")
+    mtr = input("Enter Meter No.: ")
     cursor1 = db1.cursor()
-    cursor1.execute("Select * from bill where paid='No' and meterno='"+mtr+"'")
+
+    # Fetch unpaid bills for the given meter number
+    query = "SELECT * FROM bill WHERE paid = 'No' AND meterno = %s"
+    cursor1.execute(query, (mtr,))
     res = cursor1.fetchall()
-    
-    # Display all unpaid bills for this meter
+
+    if not res:
+        print("No unpaid bills found for the given meter number.")
+        return
+
     print("Following Bills are unpaid for the given meter no ")
     print("-" * 40)
     print("MeterNo.  BillDate   Amount   DueDate")
     for k in res:
         print(k[0],"\t",k[1],"\t",k[5],"\t",k[6])
 
-    # Process the payment
     bdate = input("Enter the bill date for the bill to be paid : ")
-    q = "update bill set paid='Yes' where billdate='" + bdate + "' and meterno='" + mtr + "'"
-    cursor1.execute(q)
-    db1.commit()
     
-    # Record payment method
-    mp=input("Please Select the mode of Payment(Cash/Cheque/Card):")
+    # Update bill status using parameterized query
+    update_query = "UPDATE bill SET paid='Yes' WHERE billdate = %s AND meterno = %s"
+    cursor1.execute(update_query, (bdate, mtr))
+    db1.commit()
+
+    mp = input("Please Select the mode of Payment(Cash/Cheque/Card): ")
     print("Transaction Complete !!!")
     
 connect()  # Establishes database connection
